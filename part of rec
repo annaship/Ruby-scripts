@@ -1,0 +1,14 @@
+# # 1 filter
+#  unless bad_name == good_name
+#    count_good_words = good_name.count_words
+#    # 2 filter
+#    if count_bad_words.size > 1 && count_bad_words.size == count_good_words
+#      # TODO: take first word 
+#      # 3 filter
+#      if compare_sets(set_bad_name, good_name) < 3 
+#        # for Levenshtein use:          
+#        arr = lev_dist_match(arr, bad_name, good_name, 3)
+#        # for Taxamatch use:
+#        # arr = taxamatch_match(arr, bad_name, good_name)
+#      end
+#    end

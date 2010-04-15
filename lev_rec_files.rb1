@@ -1,0 +1,336 @@
+#!/usr/bin/ruby
+
+class String
+  def split_words
+    n = 0
+    words_array = []
+    scan(/\b\S+\b/) {n += 1}
+    words_array = scan(/\b\S+\b/)
+  end 
+end
+
+class Array
+
+  require "rubygems"
+  require "taxamatch_rb"
+  require "text"
+  require 'set'
+
+  # reconciliataion groups from two files
+  def reconsilliation(file_name = $*[1])
+    i = 0
+    arr = []
+    result = []
+    bad_names_list    = self
+    good_names_list   = get_name_list(file_name)
+    # take one line from first list
+    bad_names_list.compact.each do |bad_name|
+      i += 1
+      # take all variable for first name
+
+      # split line to array of words
+      bad_words_arr  = bad_name.split_words      
+
+      # take one line from second list
+      good_names_list.compact.each do |good_name|    
+        # puts "*" * 40
+        # if they are equal just collect them  
+        if bad_name == good_name
+          arr << bad_name
+          # puts "bad_name == good_name"
+          # puts "arr = "+ arr.inspect.to_s
+        else
+          # puts "bad_name != good_name"
+          # split line to array of words
+          good_words_arr = good_name.split_words
+          if go_compare(bad_name, good_name, bad_words_arr, good_words_arr)
+            arr << good_name
+            arr << bad_name
+          end
+        end
+        # puts "arr = "+ arr.inspect.to_s
+        result << arr.uniq if (arr.size > 1)
+        # puts "result = "+ result.inspect.to_s
+        arr = []
+      end  
+    end
+    puts "There were "+i.to_s+" names"
+    return result
+  end
+
+  def go_compare(bad_name, good_name, bad_words_arr, good_words_arr)
+    compare_flag = false
+    # puts "bad_name = "+bad_name.to_s
+    # puts "good_name = "+good_name.to_s
+
+    bad_words_arr_size = bad_words_arr.size
+
+    # not matching uninomial and lines with defferent amount of words
+    if bad_words_arr_size == good_words_arr.size && bad_words_arr_size > 1
+      n = 0
+      while n < bad_words_arr_size 
+        # puts "n = "+n.to_s
+        compare_flag = compare_words(bad_words_arr[n], good_words_arr[n])
+        n += 1
+      end
+    end
+    return compare_flag
+  end
+
+  def compare_words(word1, word2)
+    # puts "word1 = "+word1.to_s
+    # puts "word2 = "+word2.to_s
+    set_bad_word0 = word1.scan(/./).to_set
+    set_good_word0 = word2.scan(/./).to_set
+    if set_bad_word0 == set_good_word0
+      # puts "go to a second"
+      return true
+    else
+      if compare_sets(set_bad_word0, set_good_word0) < 3
+        # puts "do lev"
+        if lev_dist(word1, word2) < 3
+          #  TODO: (min(bad_name.size, good_name.size) > lev_dist() * 2) && (lev_dist() < 2 || bad_name[0] == good_name[0]
+          # puts "lev_dist < 3, return true"
+          return true
+        end
+      else
+        # puts "take next line"   
+      end
+    end
+    
+  end
+
+  # # reconciliataion groups from two files
+  # def reconsilliation(file_name = $*[1])
+  #   i = 0
+  #   arr = result = count_bad_words = []
+  #   bad_names_list    = self
+  #   good_names_list   = get_name_list(file_name)
+  #   # take one line from first list
+  #   bad_names_list.compact.each do |bad_name|
+  #       # take one line from second list
+  #       good_names_list.compact.each do |good_name|    
+  #         # if they are equal just collect them  
+  #         if bad_name == good_name
+  #           arr << bad_name
+  #           # puts "bad_name == good_name"
+  #           # puts "arr = "+ arr.inspect.to_s
+  #         else
+  #           # puts "*" * 40
+  #           # puts "bad_name = "+bad_name.to_s
+  #           # puts "good_name = "+good_name.to_s
+  #         
+  #         
+  #           bad_words_arr  = bad_name.split_words
+  #           good_words_arr = good_name.split_words
+  #           if bad_words_arr.size == good_words_arr.size && bad_words_arr.size > 1
+  #             n = 0
+  #             # puts "n = "+n.to_s
+  #             # puts "bad_words_arr[0] = "+bad_words_arr[0].to_s
+  #             # puts "good_words_arr[0] = "+good_words_arr[0].to_s
+  #             set_bad_word0 = bad_words_arr[0].scan(/./).to_set
+  #             if words_comparison(bad_words_arr[0], good_words_arr[0], set_bad_word0)
+  #               n += 1
+  #               # puts "n = "+n.to_s
+  #               # puts "bad_words_arr[1] = "+bad_words_arr[1].to_s
+  #               # puts "good_words_arr[1] = "+good_words_arr[1].to_s
+  #               set_bad_word1 = bad_words_arr[1].scan(/./).to_set
+  #               if words_comparison(bad_words_arr[1], good_words_arr[1], set_bad_word1) 
+  #                 # puts "MATCH"
+  #                 arr << good_name
+  #                 arr << bad_name
+  #                 # puts "arr = "+ arr.inspect.to_s
+  #               end
+  #             end
+  #           end
+  #       end
+  #     end
+  #     result << arr.uniq if (arr.size > 1)
+  #     arr = []
+  #     i += 1
+  # 
+  #   end
+  #   # puts "There were "+i.to_s+" names"
+  #   return result
+  # end
+  # 
+  #     result << arr.uniq if (arr.size > 1) 
+  #     arr = []
+  #     i += 1
+  #   end
+  #   # puts "There were "+i.to_s+" names"
+  #   return result
+  # end
+  
+  
+  # # 1 filter
+  #  unless bad_name == good_name
+  #    count_good_words = good_name.count_words
+  #    # 2 filter
+  #    if count_bad_words.size > 1 && count_bad_words.size == count_good_words
+  #      # TODO: take first word 
+  #      # 3 filter
+  #      if compare_sets(set_bad_name, good_name) < 3 
+  #        # for Levenshtein use:          
+  #        arr = lev_dist_match(arr, bad_name, good_name, 3)
+  #        # for Taxamatch use:
+  #        # arr = taxamatch_match(arr, bad_name, good_name)
+  #      end
+  #    end
+  # def reconsilliation(file_name = $*[1])
+  #   i = n = 0
+  #   arr = result = count_bad_words = []
+  #   bad_names_list    = self
+  #   good_names_list   = get_name_list(file_name)
+  #   bad_names_list.each do |bad_name|
+  #     bad_words_arr   = bad_name.split_words
+  #      if bad_words_arr.size > 1
+  #        bad_words_arr.each do |bad_word|
+  #          set_bad_word = bad_word.scan(/./).to_set
+  #          good_names_list.each do |good_name|
+  #            unless bad_name == good_name
+  #              good_words_arr = good_name.split_words
+  #              good_words_arr.each do |good_word|
+  #                # puts "n = "+n.to_s
+  #                # puts "bad_words_arr[n] = "+bad_words_arr[n].to_s
+  #                # puts "good_words_arr[n] = "+good_words_arr[n].to_s
+  #                if words_comparison(bad_words_arr[n], good_words_arr[n], set_bad_word)
+  #                  # puts "TRUE"
+  #                  break
+  #                end
+  #              end
+  #            else
+  #              arr << bad_name
+  #            end
+  #          end
+  #          n += 1
+  #        end
+  #      end
+  #      # result << arr unless arr.empty?
+  #     result << arr.uniq if (arr.size > 1) 
+  #     arr = []
+  #     i += 1
+  #   end
+  #   # puts "There were "+i.to_s+" names"
+  #   return result
+  # end
+   
+  # add not groupped names
+  def take_all_names
+    t1 = Time.now  
+    uniq_result = []
+    names_list = self
+    uniq_result_all = names_list.reconsilliation.uniq  
+    # puts "-" * 40
+    names_list.each do |k|
+        unless uniq_result_all.flatten.include? k
+          uniq_result_all << k unless k.empty?
+        end
+    end
+    
+    # puts "We have " + uniq_result_all.size.to_s + " groups"
+    t2 = Time.now
+    t3 = t2-t1
+    if t3 < 60 
+      # puts "The process took " + t3.to_s + " sec"
+    else
+      # puts "The process took " + (t3 / 60).to_s + " min"
+    end
+    puts "-" * 40
+    puts uniq_result_all.inspect.to_s
+    exit
+    # return uniq_result_all
+  end
+
+  private
+  
+  def words_comparison(bad_name, good_name, set_bad_name)
+    # puts "in words_comparison"
+    if bad_name == good_name
+      # puts "EQ"
+      return true
+    # else 
+    #   # puts "set_bad_name = " + set_bad_name.inspect.to_s
+    #   # puts "good_name = " + good_name.inspect.to_s
+    elsif compare_sets(set_bad_name, good_name) < 3 
+      # for Levenshtein use:          
+      lev_dist = Text::Levenshtein.distance(bad_name, good_name)
+      # puts "lev_dist = "+lev_dist.inspect.to_s
+      if lev_dist < 3
+        #  TODO: (min(bad_name.size, good_name.size) > lev_dist() * 2) && (lev_dist() < 2 || bad_name[0] == good_name[0]
+      
+        return true
+      end
+    end
+  end
+
+  def parse_match(parsed_line1, parsed_line2)
+   p = Taxamatch::Atomizer.new
+   parsed_name1 = p.parse(parsed_line1)
+   parsed_name2 = p.parse(parsed_line2)
+   begin    
+     t = Taxamatch::Base.new
+     return t.taxamatch_preparsed(parsed_name1, parsed_name2)["match"] #true
+   rescue
+     return false
+   end
+  end
+
+  def taxamatch_match(arr, name1, name2)
+   begin        
+     if Taxamatch::Base.new.taxamatch(name1, name2) then
+       arr << name2
+       arr << name1
+     end
+   rescue
+     # puts name1
+     nil
+   end
+   return arr
+  end
+
+  def lev_dist(name1, name2)
+     Text::Levenshtein.distance(name1, name2) 
+  end
+
+  def lev_dist_match(arr, name1, name2, num)
+   if Text::Levenshtein.distance(name1, name2) < num
+     arr << name2
+     arr << name1
+   end
+   return arr
+  end
+
+  def compare_sets(bad_name_set, good_name_set)
+    return good_name_set.difference(bad_name_set).size
+  end
+  
+end
+
+names_list = []  
+
+def get_name_list(file_name)
+    names_list = []  
+    file1 = File.open(file_name, 'r')                                                    
+    file1.readlines.each do |line|
+      # do stuff with line
+
+      line.chomp!
+      line.gsub!(/[^A-Za-z ]/, "")
+      names_list << line
+    end
+    return names_list
+  end
+  
+if ARGV.size < 2
+  # puts "Provide two files to compare, bad and good, please"
+else
+  first_name = ARGV[0]
+  get_name_list(first_name).take_all_names
+end
+
+# names_list = ["Plantago major", "Plantago major Linne", "Plantago majo", "Quercus Rubra"]
+# p = Taxamatch::Atomizer.new
+# parsed_name1 = p.parse('Monacanthus fronticinctus Günther 1867 sec. Eschmeyer 2004')
+# parsed_name2 = p.parse('Monacanthus fronticinctus (Gunther, 1867)')
+# t.taxamatch_preparsed(n2,n3)["match"] #true
