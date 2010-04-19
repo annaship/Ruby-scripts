@@ -1,0 +1,9 @@
+ require 'test/unit'
+
+ class TestAsciify < Test::Unit::TestCase
+   def test_asciify
+     assert_equal "I÷ÕõÓnãÕiýÏßÍizëÕiøî".remove_firstascii("?"),
+"I?t?rn?ti?n?liz?ti?n"
+     assert_equal "Möôorhead".remove_firstascii("(removed)"), "M(removed)torhead"
+   end
+ end
